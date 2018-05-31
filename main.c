@@ -12,7 +12,7 @@
  *		2 - test HiTechnic Gyro Sensor
  *		3	- test motor
  */
-const int DEBUG = 0;
+const int DEBUG = 3;
 
 
 
@@ -95,20 +95,27 @@ void test_gyro_sensor()
  */
 void test_motor()
 {
-	  bFloatDuringInactiveMotorPWM = true;
-	  bool direction = true;
 
-	  while(true)
-	  {
-	  	bMotorReflected[motorA] = direction;
-	    motor[motorA] = 20;
-	    wait1Msec(2000);
-	    motor[motorA] = 100;
-	    wait1Msec(2000);
+	  const float rCount = 0.5;
+	  float accum = 0.0;
+	  float now = 0;
+    nMotorEncoder[motorA] = 0;
 
-	    direction = !direction;
-	  }
+    while(now < p_f)
+    {
+    	motor[motorA] = 20;
+    	//eraseDisplay();
+    	now = nMotorEncoder[motorA];
+    	//nxtDisplayTextLine(1, "Accum=%.6f", now);
+  }
 
+  while(nNxtButtonPressed)
+  {
+    eraseDisplay();
+    nxtDisplayTextLine(1, "Done");
+
+    motor[motorA] = 0;
+  }
 }
 
 task main()
@@ -144,8 +151,6 @@ task main()
     angle_offset = HTGYROreadCal(HTGYRO);
 
 
-    while(true)
-    {
     	if(DEBUG == 1)
     	{
     		test_ultrasonic_sensor();
@@ -163,6 +168,5 @@ task main()
        * TODO: implement PID logic
        */
 
-    }
 
 }
