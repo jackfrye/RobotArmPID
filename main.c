@@ -10,8 +10,9 @@
  *		0 - off
  *		1 - test ultrasonic sensor
  *		2 - test HiTechnic Gyro Sensor
+ *		3	- test motor
  */
-const int DEBUG = 2;
+const int DEBUG = 0;
 
 
 
@@ -89,6 +90,27 @@ void test_gyro_sensor()
 }
 
 
+/*
+ * Test motor
+ */
+void test_motor()
+{
+	  bFloatDuringInactiveMotorPWM = true;
+	  bool direction = true;
+
+	  while(true)
+	  {
+	  	bMotorReflected[motorA] = direction;
+	    motor[motorA] = 20;
+	    wait1Msec(2000);
+	    motor[motorA] = 100;
+	    wait1Msec(2000);
+
+	    direction = !direction;
+	  }
+
+}
+
 task main()
 {
 
@@ -124,12 +146,6 @@ task main()
 
     while(true)
     {
-    	/*
-    	 * Read current angular acceleration from HiTechnic Gyro
-    	 *
-    	 */
-    	angle_t = HTGYROreadRot(HTGYRO);
-
     	if(DEBUG == 1)
     	{
     		test_ultrasonic_sensor();
@@ -138,11 +154,14 @@ task main()
       {
         test_gyro_sensor();
       }
+      else if(DEBUG == 3)
+      {
+        test_motor();
+      }
 
-    	sonar_distance = SensorValue[sonarSensor];
-
-    	nxtDisplayTextLine(1, "Sonar: %3.2f", sonar_distance);
-    	wait1Msec(50);
+      /*
+       * TODO: implement PID logic
+       */
 
     }
 
