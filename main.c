@@ -4,6 +4,7 @@
 
 #include "constants.h"
 #include "rdpartyrobotcdr/drivers/hitechnic-gyro.h"
+#include "component_test.c"
 
 /*
  * Debug Modes
@@ -12,7 +13,7 @@
  *		2 - test HiTechnic Gyro Sensor
  *		3	- test motor
  */
-const int DEBUG = 3;
+const int DEBUG = 0;
 
 
 
@@ -24,99 +25,6 @@ float init_gyro()
     return gyro_offset;
 }
 
-/*
- * Display measurements from ultrasonic sensor
- */
-void test_ultrasonic_sensor()
-{
-	while(true)
-	{
-		 float sonar_distance_l;
-
-		  eraseDisplay();
-    	wait1Msec(50);
-
-  		sonar_distance_l = SensorValue[sonarSensor];
-
-    	nxtDisplayTextLine(1, "Sonar: %3.2f", sonar_distance_l);
-    	wait1Msec(50);
-  }
-}
-
-/*
- * Re-initialize the gyro and display measurements
- *
- */
-void test_gyro_sensor()
-{
-    nxtDisplayTextLine(0, "HT Gyro");
-	  nxtDisplayTextLine(1, "Test 1");
-	  nxtDisplayTextLine(5, "Press enter");
-	  nxtDisplayTextLine(6, "to set relative");
-	  nxtDisplayTextLine(7, "heading");
-
-	  wait1Msec(2000);
-	  eraseDisplay();
-	  time1[T1] = 0;
-	  while(true) {
-	    if (time1[T1] > 1000) {
-	      eraseDisplay();
-	      nxtDisplayTextLine(1, "Resetting");
-	      nxtDisplayTextLine(1, "offset");
-	      wait1Msec(500);
-
-	      // Start the calibration and display the offset
-	      nxtDisplayTextLine(2, "Offset: %f", HTGYROstartCal(HTGYRO));
-	      PlaySound(soundBlip);
-	      while(bSoundActive) EndTimeSlice();
-	      time1[T1] = 0;
-	    }
-
-	    while(nNxtButtonPressed != kEnterButton) {
-	      eraseDisplay();
-
-	      nxtDisplayTextLine(1, "Reading");
-	      // Read the current calibration offset and display it
-	      nxtDisplayTextLine(2, "Offset: %4f", HTGYROreadCal(HTGYRO));
-
-	      nxtDisplayClearTextLine(4);
-	      // Read the current rotational speed and display it
-	      nxtDisplayTextLine(4, "Gyro:   %4f", HTGYROreadRot(HTGYRO));
-	      nxtDisplayTextLine(6, "Press enter");
-	      nxtDisplayTextLine(7, "to recalibrate");
-	      wait1Msec(100);
-	    }
-	  }
-}
-
-
-/*
- * Test motor
- */
-void test_motor()
-{
-
-	  const float rCount = 0.5;
-	  float accum = 0.0;
-	  float now = 0;
-    nMotorEncoder[motorA] = 0;
-
-    while(now < p_f)
-    {
-    	motor[motorA] = 20;
-    	//eraseDisplay();
-    	now = nMotorEncoder[motorA];
-    	//nxtDisplayTextLine(1, "Accum=%.6f", now);
-  }
-
-  while(nNxtButtonPressed)
-  {
-    eraseDisplay();
-    nxtDisplayTextLine(1, "Done");
-
-    motor[motorA] = 0;
-  }
-}
 
 task main()
 {
@@ -167,6 +75,45 @@ task main()
       /*
        * TODO: implement PID logic
        */
+
+       /*
+        * Set tachometer to 0
+        */
+       nMotorEncoder[motorA] = 0;
+       float current_position = 0;
+       float error = 0;
+       float last_error = 0;
+       float integral = 0;
+       float derivative = 0;
+       float motor_power = 0;
+
+       current_position = nMotorEncoder[motorA];
+       last_error = p_f - current_position;
+
+       while(true)
+       {
+           current_position = nMotorEncoder[motorA];
+
+           error = p_f - current_position;
+
+           integral = integral + error;
+           derivative =  last_error - error;
+           motor_power = (kp * error) + (kd * derivative) + (ki * integral);
+           if(motor_power > 100)
+           {
+             motor_power = 100;
+           }
+           else if(motor_power < 0)
+           {
+             motor_power = 0;
+           }
+
+           motor[motorA] = motor_power;
+           bFloatDuringInactiveMotorPWM = true;
+
+           last_error = error;
+
+       }
 
 
 }
