@@ -2,7 +2,7 @@
 #pragma config(Sensor, S2,     sonarSensor,         sensorSONAR)
 
 #include "constants.h"
-
+#include "rdpartyrobotcdr/drivers/hitechnic-gyro.h"
 
 /*
  * Display measurements from ultrasonic sensor
@@ -71,14 +71,13 @@ void test_gyro_sensor()
 
 
 /*
- * Test motor
+ * Test motor - used for calibration to find optimal position
  */
 void test_motor()
 {
 	while(true)
 	{
 
-	  const float rCount = 0.5;
 	  float accum = 0.0;
 	  float now = 0;
     nMotorEncoder[motorA] = 0;
@@ -86,18 +85,16 @@ void test_motor()
     while(now < p_f)
     {
     	motor[motorA] = 20;
-    	//eraseDisplay();
     	now = nMotorEncoder[motorA];
-    	//nxtDisplayTextLine(1, "Accum=%.6f", now);
-  }
+    }
 
-  while(nNxtButtonPressed)
-  {
-    eraseDisplay();
-    nxtDisplayTextLine(1, "Done");
+    while(nNxtButtonPressed)
+    {
+      eraseDisplay();
+      nxtDisplayTextLine(1, "Done");
 
-    motor[motorA] = 0;
-  }
-  wait1Msec(3000);
+      motor[motorA] = 0;
+    }
+    wait1Msec(3000);
   }
 }

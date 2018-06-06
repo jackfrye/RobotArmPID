@@ -1,9 +1,7 @@
 #pragma config(Sensor, S1,     HTGYRO,              sensorAnalogInactive)
 #pragma config(Sensor, S2,     sonarSensor,         sensorSONAR)
 
-
 #include "constants.h"
-#include "rdpartyrobotcdr/drivers/hitechnic-gyro.h"
 #include "component_test.c"
 
 /*
@@ -15,50 +13,13 @@
  */
 const int DEBUG = 0;
 
-
-
-float init_gyro()
-{
-    float gyro_offset = HTGYROstartCal(HTGYRO);
-    wait1Msec(100);
-
-    return gyro_offset;
-}
-
-
 task main()
 {
 
-    /*
-     * Constants
-     *    angle_t 				- current angle
-     *		angle_offset 		- angle originally read during calibration
-     *		gyro_offset			- offset calculated at calibration
-     *		sonar_distance	- distance sensed by sonar
-     */
-    float angle_t;
-    float angle_offset;
-    float gyro_offset;
-    float sonar_distance;
-
-    /*
-     * Ensure motors will float when nothing is applied
-     */
-    bFloatDuringInactiveMotorPWM = true;
-
-
-    /*
-     * Initialize the HiTechnic Gyro Sensor
-     *		initializes gyro_offset
-     */
-    gyro_offset = init_gyro();
-
-    /*
-     * Read angle_offset
-     */
-    angle_offset = HTGYROreadCal(HTGYRO);
-
-
+			/*
+			 * These functions will perform tests on brick peripherals
+			 * considered for the design
+			 */
     	if(DEBUG == 1)
     	{
     		test_ultrasonic_sensor();
@@ -71,10 +32,6 @@ task main()
       {
         test_motor();
       }
-
-      /*
-       * TODO: implement PID logic
-       */
 
        /*
         * Set tachometer to 0
@@ -99,6 +56,11 @@ task main()
            integral = integral + error;
            derivative =  last_error - error;
            motor_power = (kp * error) + (kd * derivative) + (ki * integral);
+
+           /*
+            * Limit motor power at 100 and do not let it move in reverse;
+            * Gravity will do the work
+            */
            if(motor_power > 100)
            {
              motor_power = 100;
@@ -109,6 +71,10 @@ task main()
            }
 
            motor[motorA] = motor_power;
+
+           /*
+     			  * Ensure motors will float when nothing is applied
+     				*/
            bFloatDuringInactiveMotorPWM = true;
 
            last_error = error;
